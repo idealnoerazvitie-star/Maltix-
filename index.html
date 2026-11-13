@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maltix | Free Malware Sandbox</title>
+    <meta
+      name="description"
+      content="Maltix is a free, no-login malware sandbox that analyzes files, websites, and apps for suspicious behavior and explains the risks in plain language."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark">M</div>
+          <div class="brand-text">
+            <span class="brand-name">Maltix</span>
+            <span class="brand-tag">Free malware sandbox</span>
+          </div>
+        </div>
+
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="#scan">Scan</a>
+          <a href="#analysis">Analysis</a>
+          <a href="#threats">Threats</a>
+          <a href="#about">About</a>
+        </nav>
+
+        <button class="ghost-button" type="button">Free • No login</button>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">AI-powered threat review</span>
+            <h1>Check files, websites, and apps for malware without signing in.</h1>
+            <p>
+              Maltix opens suspicious files in a safe sandbox, analyzes behavior,
+              and tells you what kind of malware it could be, what it can do to your
+              device, and how dangerous it really is.
+            </p>
+
+            <div class="hero-badges" aria-label="Maltix features">
+              <span>File scan</span>
+              <span>Website check</span>
+              <span>App review</span>
+              <span>Free access</span>
+            </div>
+          </div>
+
+          <div class="hero-panel" id="scan">
+            <div class="scan-header">
+              <span class="status-dot"></span>
+              <span>Sandbox analysis</span>
+            </div>
+
+            <div class="tab-group" role="tablist" aria-label="Analysis type tabs">
+              <button class="tab is-active" type="button" data-tab="file">File</button>
+              <button class="tab" type="button" data-tab="website">Website</button>
+              <button class="tab" type="button" data-tab="app">App</button>
+            </div>
+
+            <form id="scan-form" class="scan-form">
+              <div class="input-block file-input-block is-visible" data-panel="file">
+                <label for="file-upload">Upload suspicious file</label>
+                <input id="file-upload" type="file" />
+              </div>
+
+              <div class="input-block website-input-block" data-panel="website">
+                <label for="website-url">Website URL</label>
+                <input
+                  id="website-url"
+                  type="url"
+                  placeholder="https://example.com"
+                  autocomplete="off"
+                />
+              </div>
+
+              <div class="input-block app-input-block" data-panel="app">
+                <label for="app-upload">Upload app package</label>
+                <input id="app-upload" type="file" accept=".apk,.zip,.exe,.msi,.dmg,.ipa,.jar" />
+              </div>
+
+              <button class="primary-button" type="submit">Run Maltix sandbox</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="metrics" aria-label="Threat analysis metrics">
+          <div class="metric-card">
+            <strong>0</strong>
+            <span>Login required</span>
+          </div>
+          <div class="metric-card">
+            <strong>3</strong>
+            <span>Scan types</span>
+          </div>
+          <div class="metric-card">
+            <strong>24/7</strong>
+            <span>Always free</span>
+          </div>
+          <div class="metric-card">
+            <strong>AI</strong>
+            <span>Threat review</span>
+          </div>
+        </section>
+
+        <section class="results-panel" id="analysis" aria-live="polite">
+          <div class="result-header">
+            <div>
+              <span class="eyebrow soft">Analysis result</span>
+              <h2>Maltix security report</h2>
+            </div>
+            <span class="risk-badge neutral" id="risk-badge">Waiting</span>
+          </div>
+
+          <div class="report-grid">
+            <article class="report-card highlight-card">
+              <p class="card-label">Threat score</p>
+              <div class="score-row">
+                <span class="score" id="threat-score">--</span>
+                <span class="score-scale">/100</span>
+              </div>
+              <div class="meter">
+                <span id="score-meter"></span>
+              </div>
+              <p class="report-summary" id="report-summary">
+                Upload a file, website, or app package and Maltix will run an AI-powered sandbox review.
+              </p>
+            </article>
+
+            <article class="report-card">
+              <p class="card-label">Detected malware</p>
+              <h3 id="malware-type">No detection yet</h3>
+              <ul id="malware-details">
+                <li>Submit a sample to begin analysis.</li>
+              </ul>
+            </article>
+
+            <article class="report-card">
+              <p class="card-label">What it can do</p>
+              <ul id="device-impact">
+                <li>Risk details will appear here after the sandbox review.</li>
+              </ul>
+            </article>
+
+            <article class="report-card">
+              <p class="card-label">Danger level</p>
+              <h3 id="danger-level">Not assessed</h3>
+              <p id="danger-text">
+                The AI analyst will explain how harmful the sample may be to your PC, laptop, phone, tablet, or other device.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="threat-section" id="threats">
+          <div class="section-heading">
+            <span class="eyebrow">Common threats</span>
+            <h2>How malware behaves</h2>
+          </div>
+
+          <div class="threat-cards">
+            <article>
+              <h3>Ransomware</h3>
+              <p>Encrypts files and demands payment while blocking access to your data.</p>
+            </article>
+            <article>
+              <h3>Trojan</h3>
+              <p>Disguises itself as a normal file and opens a backdoor for attackers.</p>
+            </article>
+            <article>
+              <h3>Keylogger</h3>
+              <p>Captures your keystrokes and can steal passwords, messages, and banking details.</p>
+            </article>
+            <article>
+              <h3>Spyware</h3>
+              <p>Monitors your activity, location, screen, or microphones without consent.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="about" id="about">
+          <div class="section-heading">
+            <span class="eyebrow">Why Maltix</span>
+            <h2>Fast, open, and built for everyday protection.</h2>
+          </div>
+
+          <div class="about-grid">
+            <div>
+              <h3>Free for everyone</h3>
+              <p>No login, no paywall, and no private access gate. Anyone can check a file, site, or app.</p>
+            </div>
+            <div>
+              <h3>Sandbox-first review</h3>
+              <p>Files are run in a controlled environment so suspicious behavior can be evaluated safely.</p>
+            </div>
+            <div>
+              <h3>Clear explanations</h3>
+              <p>Maltix explains the malware type, what it does, what devices it affects, and how dangerous it is.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
