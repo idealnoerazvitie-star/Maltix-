@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#06131f" />
+    <meta name="theme-color" content="#071822" />
     <title>Maltix | Free Malware Sandbox Demo</title>
     <meta
       name="description"
-      content="Maltix is a free, no-login malware sandbox demo for files, websites, and apps."
+      content="Maltix is a browser-first malware sandbox demo for checking files, websites, and apps."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -33,7 +33,8 @@
           <a href="#scan">Scan</a>
           <a href="#analysis">Report</a>
           <a href="#features">Features</a>
-          <a href="#security">Security</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
         </nav>
 
         <div class="header-actions">
@@ -50,12 +51,17 @@
             <span class="eyebrow">AI-powered threat review</span>
             <h1>Check files, websites, and apps without signing in.</h1>
             <p>
-              Maltix is a browser-first malware-analysis demo that gives users a clean,
-              dashboard-style flow for reviewing suspicious files, URLs, and app packages.
-              It highlights how a real security report could read — while clearly stating it is not a real detector.
+              Maltix is a browser-first malware analysis demo built to look like a modern security dashboard.
+              It lets users review suspicious artifacts, understand likely threats, and surface clear risk guidance
+              without pretending to be a real malware engine.
             </p>
 
-            <div class="hero-badges" aria-label="Maltix features">
+            <div class="hero-actions">
+              <button class="primary-button" data-scroll="scan" type="button">Start demo</button>
+              <a class="secondary-button" href="#pricing">See pricing</a>
+            </div>
+
+            <div class="hero-badges" aria-label="Maltix highlights">
               <span>File scan</span>
               <span>Website check</span>
               <span>App review</span>
@@ -66,7 +72,7 @@
               <span class="demo-dot" aria-hidden="true"></span>
               <span>
                 <strong>Important:</strong> This is a frontend demo and not a real malware engine.
-                Files stay local in the browser and are not uploaded or executed.
+                Files remain in the browser and are not uploaded or executed.
               </span>
             </div>
           </div>
@@ -78,44 +84,14 @@
             </div>
 
             <div class="tab-group" role="tablist" aria-label="Choose analysis type">
-              <button
-                class="tab is-active"
-                id="tab-file"
-                type="button"
-                role="tab"
-                aria-selected="true"
-                aria-controls="panel-file"
-                data-tab="file"
-              >
-                File
-              </button>
-              <button
-                class="tab"
-                id="tab-website"
-                type="button"
-                role="tab"
-                aria-selected="false"
-                aria-controls="panel-website"
-                data-tab="website"
-              >
-                Website
-              </button>
-              <button
-                class="tab"
-                id="tab-app"
-                type="button"
-                role="tab"
-                aria-selected="false"
-                aria-controls="panel-app"
-                data-tab="app"
-              >
-                App
-              </button>
+              <button class="tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panel-file" data-tab="file">File</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="panel-website" data-tab="website">Website</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="panel-app" data-tab="app">App</button>
             </div>
 
             <form id="scan-form" class="scan-form">
-              <div class="upload-surface is-visible" id="panel-file" role="tabpanel" aria-labelledby="tab-file" data-panel="file">
-                <input id="file-upload" type="file" class="file-input" aria-label="Choose a file for local metadata review" />
+              <div class="upload-surface is-visible" id="panel-file" role="tabpanel" data-panel="file">
+                <input id="file-upload" class="file-input" type="file" aria-label="Choose a file for local metadata review" />
                 <label for="file-upload" class="upload-label">
                   <span class="upload-icon" aria-hidden="true">↑</span>
                   <strong>Drop a file here</strong>
@@ -123,14 +99,14 @@
                 </label>
               </div>
 
-              <div class="upload-surface" id="panel-website" role="tabpanel" aria-labelledby="tab-website" data-panel="website" hidden>
+              <div class="upload-surface" id="panel-website" role="tabpanel" data-panel="website" hidden>
                 <label class="url-label" for="website-url">Website URL</label>
                 <input id="website-url" type="url" placeholder="https://example.com" autocomplete="url" />
-                <p class="field-help">Maltix validates the URL structure only. It does not fetch the site.</p>
+                <p class="field-help">This validates the URL shape only. It does not fetch the site.</p>
               </div>
 
-              <div class="upload-surface" id="panel-app" role="tabpanel" aria-labelledby="tab-app" data-panel="app" hidden>
-                <input id="app-upload" type="file" class="file-input" accept=".apk,.zip,.exe,.msi,.dmg,.ipa,.jar" aria-label="Choose an app package for local metadata review" />
+              <div class="upload-surface" id="panel-app" role="tabpanel" data-panel="app" hidden>
+                <input id="app-upload" class="file-input" type="file" accept=".apk,.zip,.exe,.msi,.dmg,.ipa,.jar" aria-label="Choose an app package for local metadata review" />
                 <label for="app-upload" class="upload-label">
                   <span class="upload-icon" aria-hidden="true">↑</span>
                   <strong>Drop an app package here</strong>
@@ -149,30 +125,186 @@
           </section>
         </section>
 
-        <section class="metrics" aria-label="Maltix metrics">
-          <div class="metric-card">
-            <strong>0</strong>
-            <span>Uploads sent</span>
+        <section class="workspace-shell" aria-label="Maltix dashboard overview">
+          <aside class="workspace-sidebar">
+            <div class="sidebar-header">
+              <span class="sidebar-logo">M</span>
+              <div>
+                <strong>Maltix Console</strong>
+                <small>Security workspace</small>
+              </div>
+            </div>
+
+            <nav class="workspace-nav" aria-label="Console navigation">
+              <button class="nav-link active" type="button" data-panel-target="overview">Overview</button>
+              <button class="nav-link" type="button" data-panel-target="incidents">Incidents</button>
+              <button class="nav-link" type="button" data-panel-target="network">Network</button>
+              <button class="nav-link" type="button" data-panel-target="reports">Reports</button>
+            </nav>
+
+            <div class="sidebar-card">
+              <span class="mini-label">SLA</span>
+              <strong>4.7h</strong>
+              <small>Median triage window</small>
+            </div>
+          </aside>
+
+          <section class="workspace-main" id="overview">
+            <div class="workspace-topbar">
+              <div>
+                <span class="eyebrow soft">Operations</span>
+                <h2>Threat overview</h2>
+              </div>
+              <div class="toolbar-actions">
+                <button type="button" class="ghost-button small">Export JSON</button>
+                <button type="button" class="primary-button compact">Launch scan</button>
+              </div>
+            </div>
+
+            <div class="metric-grid">
+              <article class="metric-card danger">
+                <span>Critical</span>
+                <strong>14</strong>
+                <small>Needs investigation</small>
+              </article>
+              <article class="metric-card warn">
+                <span>Warnings</span>
+                <strong>28</strong>
+                <small>Requires review</small>
+              </article>
+              <article class="metric-card safe">
+                <span>Resolved</span>
+                <strong>96</strong>
+                <small>In 7 days</small>
+              </article>
+              <article class="metric-card neutral">
+                <span>Queue</span>
+                <strong>11</strong>
+                <small>Active submissions</small>
+              </article>
+            </div>
+
+            <div class="console-grid">
+              <article class="panel large-panel">
+                <div class="panel-heading">
+                  <h3>Threat volume</h3>
+                  <span class="trend up">+18.2%</span>
+                </div>
+                <div class="bar-chart" aria-label="Threat volume chart">
+                  <span style="--height: 38%"></span>
+                  <span style="--height: 56%"></span>
+                  <span style="--height: 42%"></span>
+                  <span style="--height: 60%"></span>
+                  <span style="--height: 75%"></span>
+                  <span style="--height: 86%"></span>
+                  <span style="--height: 68%"></span>
+                  <span style="--height: 83%"></span>
+                </div>
+              </article>
+
+              <article class="panel compact-panel" id="incidents">
+                <div class="panel-heading">
+                  <h3>Live queue</h3>
+                  <span class="live-tag"><i></i>Live</span>
+                </div>
+                <ul class="queue-list">
+                  <li><span>malware-demo.zip</span><em>Queued</em></li>
+                  <li><span>payroll-portal.exe</span><em>Review</em></li>
+                  <li><span>app-v2.apk</span><em>Blocked</em></li>
+                  <li><span>vendor-login.html</span><em>Flagged</em></li>
+                </ul>
+              </article>
+            </div>
+
+            <div class="detail-grid">
+              <article class="panel" id="network">
+                <div class="panel-heading">
+                  <h3>Top findings</h3>
+                  <div class="filter-row">
+                    <button class="filter-pill active" type="button">All</button>
+                    <button class="filter-pill" type="button">Malware</button>
+                    <button class="filter-pill" type="button">Phishing</button>
+                  </div>
+                </div>
+                <ul class="finding-list">
+                  <li><span>Credential harvesting pattern</span><strong>High</strong></li>
+                  <li><span>Unexpected persistence hook</span><strong>High</strong></li>
+                  <li><span>Suspicious outbound beacon</span><strong>Medium</strong></li>
+                  <li><span>Obfuscated script execution</span><strong>Medium</strong></li>
+                </ul>
+              </article>
+
+              <article class="panel" id="reports">
+                <div class="panel-heading">
+                  <h3>Recent reports</h3>
+                  <span class="mini-muted">Updated 2m ago</span>
+                </div>
+                <table class="report-table">
+                  <thead>
+                    <tr>
+                      <th>Artifact</th>
+                      <th>Risk</th>
+                      <th>Owner</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>invoice_428.pdf</td>
+                      <td><span class="risk-pill danger">High</span></td>
+                      <td>Ops</td>
+                    </tr>
+                    <tr>
+                      <td>checkout-app.apk</td>
+                      <td><span class="risk-pill warn">Medium</span></td>
+                      <td>QA</td>
+                    </tr>
+                    <tr>
+                      <td>news-letter-site</td>
+                      <td><span class="risk-pill safe">Low</span></td>
+                      <td>Marketing</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="stats-strip" aria-label="Key platform metrics">
+          <div class="stat-box">
+            <span class="stat-number" data-target="0">0</span>
+            <span class="stat-label">Uploads sent</span>
           </div>
-          <div class="metric-card">
-            <strong>3</strong>
-            <span>Input types</span>
+          <div class="stat-box">
+            <span class="stat-number" data-target="3">0</span>
+            <span class="stat-label">Scan types</span>
           </div>
-          <div class="metric-card">
-            <strong>25 MB</strong>
-            <span>Local limit</span>
+          <div class="stat-box">
+            <span class="stat-number" data-target="25">0</span>
+            <span class="stat-label">MB local limit</span>
           </div>
-          <div class="metric-card">
-            <strong>Free</strong>
-            <span>No login needed</span>
+          <div class="stat-box">
+            <span class="stat-number" data-target="100">0</span>
+            <span class="stat-label">Demo coverage</span>
           </div>
         </section>
 
-        <section class="trust-bar" aria-label="Security promise">
-          <div class="trust-pill">No upload</div>
-          <div class="trust-pill">No execution</div>
-          <div class="trust-pill">No login</div>
-          <div class="trust-pill">No real verdict</div>
+        <section class="social-proof" aria-label="Customer trust signals">
+          <div class="proof-card">
+            <span class="proof-score">4.9/5</span>
+            <p>“The interface feels like a real analytics console for cyber risk review.”</p>
+            <strong>Security Ops Lead</strong>
+          </div>
+          <div class="proof-card">
+            <span class="proof-score">Fast</span>
+            <p>“Clear labels, low friction, and a clean sandbox demo flow.”</p>
+            <strong>Startup Founder</strong>
+          </div>
+          <div class="proof-card">
+            <span class="proof-score">Plain English</span>
+            <p>“The report explains what a file could do without overwhelming users.”</p>
+            <strong>Threat Analyst</strong>
+          </div>
         </section>
 
         <section class="results-panel" id="analysis" aria-labelledby="report-heading" aria-live="polite">
@@ -202,8 +334,7 @@
                 <span class="score-scale">/100 · sample only</span>
               </div>
               <p class="report-summary" id="report-summary">
-                Choose a local file, enter a URL, or open a sample report.
-                No real malware scan is performed in this demo.
+                Choose a local file, paste a URL, or open a sample report. This demo does not perform real malware detection.
               </p>
             </article>
 
@@ -211,14 +342,14 @@
               <p class="card-label">Finding</p>
               <h3 id="malware-type">No analysis yet</h3>
               <ul id="malware-details">
-                <li>Run a demo sample or review local metadata.</li>
+                <li>Run a demo sample or review local file metadata.</li>
               </ul>
             </article>
 
             <article class="report-card">
               <p class="card-label">Potential impact</p>
               <ul id="device-impact">
-                <li>No behavior analysis has been performed.</li>
+                <li>No behavior analysis has run yet.</li>
               </ul>
             </article>
 
@@ -226,7 +357,7 @@
               <p class="card-label">Risk guidance</p>
               <h3 id="danger-level">Not assessed</h3>
               <p id="danger-text">
-                This demo cannot provide a real verdict. Treat unknown files and links as untrusted until verified by a trusted security product.
+                This demo cannot produce a real verdict. Treat unknown files and links as untrusted until confirmed by a trusted security product.
               </p>
             </article>
           </div>
@@ -239,9 +370,7 @@
           </div>
 
           <div class="report-actions">
-            <button class="report-download" type="button" id="download-report" disabled>
-              Download demo report
-            </button>
+            <button class="report-download" id="download-report" type="button" disabled>Download demo report</button>
           </div>
         </section>
 
@@ -255,22 +384,22 @@
             <article>
               <span class="timeline-number">01</span>
               <h3>Collect sample</h3>
-              <p>Upload a file, app package, or enter a URL.</p>
+              <p>Upload a file, drag in an app package, or enter a URL.</p>
             </article>
             <article>
               <span class="timeline-number">02</span>
-              <h3>Review behaviors</h3>
-              <p>Inspect metadata, patterns, permissions, and suspicious signals.</p>
+              <h3>Review behavior</h3>
+              <p>Review metadata, patterns, permissions, and suspicious signals.</p>
             </article>
             <article>
               <span class="timeline-number">03</span>
-              <h3>Explain impacts</h3>
-              <p>Translate findings into plain-language risk summaries.</p>
+              <h3>Explain impact</h3>
+              <p>Map findings into plain-language risk summaries for non-experts.</p>
             </article>
             <article>
               <span class="timeline-number">04</span>
               <h3>Escalate safely</h3>
-              <p>Guide users toward a trusted review workflow when the risk is high.</p>
+              <p>Point users toward a trusted security workflow when risk is high.</p>
             </article>
           </div>
         </section>
@@ -284,61 +413,101 @@
           <div class="threat-cards">
             <article>
               <h3>Local file review</h3>
-              <p>
-                Reads the file in-browser only, calculates a SHA-256 hash, and shows basic metadata.
-              </p>
+              <p>Calculates metadata and SHA-256 hashes in-browser without sending the file anywhere.</p>
             </article>
             <article>
               <h3>Safe URL checks</h3>
-              <p>
-                Validates http/https format without fetching the destination, running scripts, or exposing your browsing session.
-              </p>
+              <p>Validates http/https format without fetching the destination or running scripts.</p>
             </article>
             <article>
               <h3>Fictional samples</h3>
-              <p>
-                Lets you explore warning-style examples for files, URLs, and apps without pretending they are real detections.
-              </p>
+              <p>Lets you explore warning-style examples for files, URLs, and apps without misrepresenting the results.</p>
             </article>
             <article>
-              <h3>Export report</h3>
-              <p>
-                Downloads a plain-text report summarizing the sample findings and risk guidance.
-              </p>
+              <h3>Report export</h3>
+              <p>Downloads a plain-text summary so the analysis can be reviewed outside the browser.</p>
             </article>
           </div>
         </section>
 
-        <section class="about" id="security">
-          <div class="section-heading">
-            <span class="eyebrow">Privacy and safety</span>
-            <h2>Your files stay on this page.</h2>
+        <section class="pricing" id="pricing">
+          <div class="section-heading centered">
+            <span class="eyebrow">Simple pricing</span>
+            <h2>Choose the level that fits your workflow</h2>
           </div>
 
-          <div class="about-grid">
-            <div>
-              <h3>No upload</h3>
-              <p>
-                Files are processed locally in the browser only. No bytes are sent to a backend for this demo.
-              </p>
+          <div class="pricing-grid">
+            <article class="price-card">
+              <h3>Starter</h3>
+              <div class="price">$0</div>
+              <p>For personal checks and demo exploration.</p>
+              <ul>
+                <li>1 user</li>
+                <li>Local review</li>
+                <li>Limited report export</li>
+              </ul>
+              <button type="button" class="price-button">Get started</button>
+            </article>
+
+            <article class="price-card featured">
+              <span class="plan-tag">Most popular</span>
+              <h3>Pro</h3>
+              <div class="price">$19<span>/mo</span></div>
+              <p>For small teams that need repeatable reviews.</p>
+              <ul>
+                <li>Unlimited samples</li>
+                <li>Advanced risk summaries</li>
+                <li>Priority report views</li>
+              </ul>
+              <button type="button" class="price-button">Start free trial</button>
+            </article>
+
+            <article class="price-card">
+              <h3>Enterprise</h3>
+              <div class="price">Custom</div>
+              <p>For regulated organizations and SOC workflows.</p>
+              <ul>
+                <li>Role-based access</li>
+                <li>Audit logs</li>
+                <li>API & workflow hooks</li>
+              </ul>
+              <button type="button" class="price-button">Talk to sales</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="faq" id="faq">
+          <div class="section-heading centered">
+            <span class="eyebrow">FAQ</span>
+            <h2>Common questions</h2>
+          </div>
+
+          <div class="faq-list">
+            <div class="faq-item is-open">
+              <button class="faq-question" type="button" aria-expanded="true">
+                Is Maltix a real malware detector?
+              </button>
+              <div class="faq-answer">
+                <p>No. This product is a demo interface for learning and prototype exploration, not a live threat-detection engine.</p>
+              </div>
             </div>
-            <div>
-              <h3>No execution</h3>
-              <p>
-                Maltix does not open or run suspicious files. This is a user-experience prototype, not a real sandbox.
-              </p>
+
+            <div class="faq-item">
+              <button class="faq-question" type="button" aria-expanded="false">
+                Are files uploaded anywhere?
+              </button>
+              <div class="faq-answer">
+                <p>No. In this demo, file handling stays local to the browser. It is intentionally designed to avoid backend uploads.</p>
+              </div>
             </div>
-            <div>
-              <h3>Real security needs backend</h3>
-              <p>
-                Production malware analysis requires sandbox infrastructure, policy controls, and strict storage rules.
-              </p>
-            </div>
-            <div>
-              <h3>Human review</h3>
-              <p>
-                Anything suspicious should be investigated with a trusted security team, endpoint product, or incident-response workflow.
-              </p>
+
+            <div class="faq-item">
+              <button class="faq-question" type="button" aria-expanded="false">
+                Can I use this for actual security triage?
+              </button>
+              <div class="faq-answer">
+                <p>Not as-is. Real security triage requires sandbox infrastructure, policy controls, and verified threat intelligence pipelines.</p>
+              </div>
             </div>
           </div>
         </section>

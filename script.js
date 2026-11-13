@@ -53,6 +53,7 @@
   }
 
   function updateBadge(kind, text) {
+    if (!reportBadge) return;
     reportBadge.textContent = text;
     reportBadge.className = `risk-badge ${kind}`;
   }
@@ -73,7 +74,7 @@
     updateBadge(badgeKind, data.level);
 
     const scoreValue = data.score == null ? 0 : Math.max(0, Math.min(100, data.score));
-    meter.style.width = `${scoreValue}%`;
+    if (meter) meter.style.width = `${scoreValue}%`;
 
     const list = $('malware-details');
     list.replaceChildren();
@@ -92,7 +93,7 @@
     });
 
     currentReport = { ...data, generatedAt: new Date().toISOString() };
-    reportButton.disabled = false;
+    if (reportButton) reportButton.disabled = false;
   }
 
   async function getHash(file) {
@@ -139,7 +140,7 @@
     }
 
     setText('scan-status', 'Calculating local metadata…');
-    meter.style.width = '36%';
+    if (meter) meter.style.width = '36%';
 
     let hash;
     try {
@@ -292,8 +293,8 @@
   function setInitialState() {
     setText('scan-status', 'Ready · demo mode');
     updateBadge('neutral', 'Waiting');
-    meter.style.width = '0%';
-    reportButton.disabled = true;
+    if (meter) meter.style.width = '0%';
+    if (reportButton) reportButton.disabled = true;
   }
 
   function animateCounters() {
@@ -311,6 +312,24 @@
       }, 30);
     });
   }
+
+  document.querySelectorAll('.nav-link').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.nav-link').forEach((link) => link.classList.remove('active'));
+      button.classList.add('active');
+      const target = document.getElementById(button.dataset.panelTarget);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  document.querySelectorAll('.filter-pill').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill').forEach((pill) => pill.classList.remove('active'));
+      button.classList.add('active');
+    });
+  });
 
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => setTab(tab.dataset.tab));
