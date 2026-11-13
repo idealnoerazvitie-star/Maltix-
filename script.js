@@ -2,224 +2,200 @@
   'use strict';
 
   const $ = (id) => document.getElementById(id);
+
   const tabs = [...document.querySelectorAll('.tab[data-tab]')];
   const panels = [...document.querySelectorAll('.upload-surface[data-panel]')];
   const form = $('scan-form');
+  const riskBadge = $('risk-badge');
+  const scoreMeter = $('score-meter');
+  const reportButton = $('download-report');
+  const themeToggle = $('theme-toggle');
+  const qaButtons = [...document.querySelectorAll('.faq-question')];
+  const statEls = [...document.querySelectorAll('.stat-number')];
+
   const fileInput = $('file-upload');
   const appInput = $('app-upload');
-  const urlInput = $('website-url');
-  const reportButton = $('download-report');
-  const riskBadge = $('risk-badge');
-  const meter = $('score-meter');
-  const themeToggle = $('theme-toggle');
-  const maxBytes = 25 * 1024 * 1024;
+  const websiteInput = $('website-url');
 
-  let activeTab = 'file';
-  let reported = false;
   let currentReport = null;
-  const selectedFiles = { file: null, app: null };
+  let activeTab = 'file';
+
+  const maxBytes = 25 * 1024 * 1024;
 
   function setText(id, value) {
     const el = $(id);
     if (el) el.textContent = value;
   }
 
-  function updateBadge(kind, label) {
+  function setBadge(type, label) {
+    if (!riskBadge) return;
     riskBadge.textContent = label;
-    riskBadge.className = `risk-badge ${kind}`;
+    riskBadge.className = `risk-badge ${type}`;
   }
 
   function formatBytes(bytes) {
-    if (!Number.isFinite(bytes)) return 'Not available';
-    if (bytes < 1024) return `${bytes} B`;
-
-    const units = ['KB', 'MB', 'GB'];
-    let value = bytes / 1024;
-    let unitIndex = 0;
-
-    while (value >= 1024 && unitIndex < units.length - 1) {
+    if (!Number.isFinite(bytes) || bytes <= 0) return 'Not available';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let value = bytes;
+    let index = 0;
+    while (value >= 1024 && index < units.length - 1) {
       value /= 1024;
-      unitIndex += 1;
+      index += 1;
     }
-
-    return `${value.toFixed(1)} ${units[unitIndex]}`;
+    return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
   }
 
   function setTab(name) {
     activeTab = name;
     tabs.forEach((tab) => {
-      const selected = tab.dataset.tab === name;
-      tab.classList.toggle('is-active', selected);
-      tab.setAttribute('aria-selected', String(selected));
+      const isActive = tab.dataset.tab === name;
+      tab.classList.toggle('is-active', isActive);
+      tab.setAttribute('aria-selected', String(isActive));
     });
 
     panels.forEach((panel) => {
-      const show = panel.dataset.panel === name;
-      panel.classList.toggle('is-visible', show);
-      panel.hidden = !show;
+      const shouldShow = panel.dataset.panel === name;
+      panel.classList.toggle('is-visible', shouldShow);
+      panel.hidden = !shouldShow;
     });
   }
 
-  function renderReport(data) {
-    setText('threat-score', data.score == null ? '—' : String(data.score));
-    setText('malware-type', data.title);
-    setText('report-summary', data.summary);
-    setText('danger-level', data.level);
-    setText('danger-text', data.danger);
-    setText('meta-type', data.type || 'Not available');
-    setText('meta-size', data.size || 'Not available');
-    setText('meta-hash', data.hash || 'Not available');
-    setText('meta-source', data.source || 'Not available');
-    setText('scan-status', data.status || 'Demo complete');
+  function renderReport(report) {
+    setText('threat-score', report.score == null ? '—' : String(report.score));
+    setText('malware-type', report.title);
+    setText('report-summary', report.summary);
+    setText('danger-level', report.level);
+    setText('danger-text', report.danger);
+    setText('meta-type', report.type || 'Not available');
+    setText('meta-size', report.size || 'Not available');
+    setText('meta-hash', report.hash || 'Not available');
+    setText('meta-source', report.source || 'Not available');
+    setText('scan-status', report.status || 'Demo complete');
+
+    const score = Math.max(0, Math.min(100, Number(report.score ?? 0)));
+    scoreMeter.style.width = `${score}%`;
+    setBadge(report.badge || 'neutral', report.level || 'Waiting');
 
     const list = $('malware-details');
-    list.replaceChildren();
-    (data.details || []).forEach((item) => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      list.appendChild(li);
+    list.innerHTML = '';
+    (report.details || []).forEach((entry) => {
+      const item = document.createElement('li');
+      item.textContent = entry;
+      list.appendChild(item);
     });
 
-    const impactList = $('device-impact');
-    impactList.replaceChildren();
-    (data.impact || []).forEach((item) => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      impactList.appendChild(li);
+    const impact = $('device-impact');
+    impact.innerHTML = '';
+    (report.impact || []).forEach((entry) => {
+      const item = document.createElement('li');
+      item.textContent = entry;
+      impact.appendChild(item);
     });
 
-    const score = data.score == null ? 0 : Math.max(0, Math.min(100, Number(data.score)));
-    meter.style.width = `${score}%`;
-
-    updateBadge(data.kind || 'neutral', data.level || 'Waiting');
-    currentReport = { ...data, generatedAt: new Date().toISOString() };
+    currentReport = { ...report, generatedAt: new Date().toISOString() };
     reportButton.disabled = false;
-    reported = true;
   }
 
-  async function sha256(file) {
-    if (!crypto || !crypto.subtle) {
-      return 'Browser does not support Web Crypto';
-    }
-
+  async function calculateSha256(file) {
+    if (!file) return 'Not available';
     const buffer = await file.arrayBuffer();
-    const digest = await crypto.subtle.digest('SHA-256', buffer);
-    return [...new Uint8Array(digest)]
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('');
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('');
   }
 
   function setSelectedFile(kind, file) {
     if (!file) return;
-    selectedFiles[kind] = file;
-    const panel = document.querySelector(`[data-panel="${kind}"]`);
+    const panel = document.querySelector(`.upload-surface[data-panel="${kind}"]`);
     if (!panel) return;
 
-    let info = panel.querySelector('.selected-file');
-    if (!info) {
-      info = document.createElement('p');
-      info.className = 'selected-file';
-      info.style.marginTop = '12px';
-      info.style.color = 'var(--muted)';
-      panel.appendChild(info);
-    }
-
-    info.textContent = `${file.name} · ${formatBytes(file.size)}`;
+    const info = panel.querySelector('.selected-file') || document.createElement('p');
+    info.className = 'selected-file';
+    info.textContent = `${file.name} • ${formatBytes(file.size)}`;
+    info.style.marginTop = '12px';
+    info.style.color = 'var(--muted)';
+    if (!info.parentElement) panel.appendChild(info);
   }
 
   async function reviewFile(file, label) {
     if (!file) {
+      setBadge('warn', 'No file');
       setText('scan-status', 'Choose a file or try a sample.');
-      updateBadge('warn', 'No file');
       return;
     }
 
     if (file.size > maxBytes) {
+      setBadge('warn', 'Too large');
       setText('scan-status', 'File exceeds the 25 MB demo limit.');
-      updateBadge('warn', 'Too large');
       return;
     }
 
-    setText('scan-status', 'Calculating local metadata…');
-    meter.style.width = '35%';
-
-    let hash = 'Could not calculate hash in this browser';
-    try {
-      hash = await sha256(file);
-    } catch {
-      hash = 'Could not calculate hash in this browser';
-    }
-
+    const hash = await calculateSha256(file).catch(() => 'Unavailable in this browser');
     renderReport({
       title: 'No malware verdict — demo only',
       score: null,
       level: 'Not scanned',
-      kind: 'neutral',
-      summary: 'This page calculated local file metadata and a SHA-256 hash in the browser. It did not upload the file, execute it, or perform a real malware check.',
+      badge: 'neutral',
+      summary: 'This page reviewed local metadata only. It did not upload the file, sandbox it, or perform a real malware detection step.',
       details: [
-        'No antivirus engine or sandbox is connected.',
-        'A SHA-256 hash identifies the file, but it is not a safety verdict.',
-        'Do not open suspicious files based on this demo alone.'
+        'No real backend sandbox is connected.',
+        'The file stayed in the browser for local metadata evaluation.',
+        'SHA-256 is only a file identifier, not a safety verdict.'
       ],
       impact: [
         'No behavior analysis was performed.',
-        'Use a trusted security product for a real scan and keep unknown files isolated.'
+        'Treat unknown files as untrusted until verified through official security tooling.'
       ],
-      danger: 'Unknown. Treat the file as untrusted until a real security product verifies it.',
+      danger: 'Unknown. This demo cannot confirm whether the file is malicious or safe. Use a trusted security analyzer for a real verdict.',
       type: file.type || label || 'Unknown file type',
       size: formatBytes(file.size),
       hash,
-      source: 'File stays in this browser — no upload',
+      source: 'Local browser-only review',
       status: 'Metadata review complete — no real scan performed'
     });
   }
 
-  function reviewUrl(rawUrl) {
-    const value = rawUrl.trim();
-
-    if (!value) {
-      setText('scan-status', 'Enter a complete URL, such as https://example.com');
-      updateBadge('warn', 'Invalid URL');
+  function reviewWebsite(urlValue) {
+    if (!urlValue.trim()) {
+      setBadge('warn', 'Invalid URL');
+      setText('scan-status', 'Add a full URL such as https://example.com');
       return;
     }
 
-    let url;
     try {
-      url = new URL(value);
+      const url = new URL(urlValue);
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        setBadge('warn', 'Unsupported URL');
+        setText('scan-status', 'Only http and https are supported.');
+        return;
+      }
+
+      renderReport({
+        title: 'URL not scanned — demo only',
+        score: null,
+        level: 'Not scanned',
+        badge: 'neutral',
+        summary: `The URL format is valid and the host is ${url.hostname}. No live fetch or reputation lookup was performed in this demo.`,
+        details: [
+          'This page did not request the website content.',
+          'No reputation database or web sandbox was consulted.',
+          'A valid URL format still does not confirm a site is safe.'
+        ],
+        impact: [
+          'No scripts were executed or inspected.',
+          'Unknown websites can still present phishing, scams, or malicious content.'
+        ],
+        danger: 'Unknown. User caution is still required. Verify the destination independently before submitting credentials or downloading files.',
+        type: 'Website URL',
+        size: 'Not applicable',
+        hash: 'Not applicable',
+        source: url.origin,
+        status: 'URL validation complete — no live site analysis performed'
+      });
     } catch {
-      setText('scan-status', 'URL format is invalid.');
-      updateBadge('warn', 'Invalid URL');
-      return;
+      setBadge('warn', 'Invalid URL');
+      setText('scan-status', 'The URL format is invalid.');
     }
-
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      setText('scan-status', 'Only http:// and https:// are supported.');
-      updateBadge('warn', 'Unsupported URL');
-      return;
-    }
-
-    renderReport({
-      title: 'URL not scanned — demo only',
-      score: null,
-      level: 'Not scanned',
-      kind: 'neutral',
-      summary: `The URL format is valid and its hostname is ${url.hostname}. This page did not fetch the site or perform a live threat lookup.`,
-      details: [
-        'No retrieval or browser-isolation service is connected.',
-        'The page was not fetched; redirects and live content were not inspected.',
-        'Never enter credentials on a site you do not trust.'
-      ],
-      impact: [
-        'No page scripts were run or inspected.',
-        'A URL alone cannot establish that a site is safe or malicious.'
-      ],
-      danger: 'Unknown. Treat unfamiliar links cautiously and verify them with a trusted security service.',
-      type: 'Website URL',
-      size: 'Not applicable',
-      hash: 'Not applicable',
-      source: url.origin,
-      status: 'URL validation complete — no live site analysis performed'
-    });
   }
 
   const sampleReports = {
@@ -227,146 +203,89 @@
       title: 'Illustrative sample: suspicious downloader',
       score: 82,
       level: 'High · sample only',
-      kind: 'warn',
-      summary: 'Fictional example showing how a future report might describe downloader behavior. This is not a scan of a real file.',
+      badge: 'warn',
+      summary: 'Example risk summary for a fictional downloader. This is not an actual detection result for a real file.',
       details: [
-        'Example behavior: attempts to fetch a second-stage payload.',
-        'Example behavior: creates an unexpected startup entry.',
-        'Illustrative score only — no detector ran.'
+        'Example signal: downloads a second-stage payload.',
+        'Example signal: creates unauthorized startup persistence.',
+        'Illustrative risk score only — the file was never scanned.'
       ],
       impact: [
-        'A real downloader could fetch additional unwanted software.',
-        'Impact depends on the payload and whether it executes.'
+        'Example outcome: unwanted software installation or credential theft.',
+        'Impact depends on the actual payload and execution context.'
       ],
-      danger: 'Illustrative example only. It is not evidence that any actual file is malicious.',
-      type: 'Example executable',
-      size: '2.4 MB · sample',
-      hash: 'Example only · no file hash',
-      source: 'Built-in fictional sample',
-      status: 'Sample report loaded',
+      danger: 'This is a demonstration only. It should not be treated as a real security verdict.',
+      type: 'Sample executable',
+      size: '2.4 MB',
+      hash: 'Sample only · no real hash',
+      source: 'Built-in fictional report',
+      status: 'Sample report loaded'
     },
     website: {
-      title: 'Illustrative sample: possible phishing',
+      title: 'Illustrative sample: phishing risk',
       score: 74,
       level: 'High · sample only',
-      kind: 'warn',
-      summary: 'Fictional example demonstrating a possible credential-harvesting warning. The page was not visited or inspected.',
+      badge: 'warn',
+      summary: 'Example warning for a fake login page intended to imitate a trusted service.',
       details: [
-        'Example signal: a lookalike brand and urgency language.',
-        'Example signal: repeated attempts to collect login data.',
-        'Illustrative result; no live site analysis occurred.'
+        'Example signal: mimicry of a known brand and login flow.',
+        'Example signal: request for credentials and MFA codes.',
+        'Illustrative detection pattern only — no live URL analysis occurred.'
       ],
       impact: [
-        'A phishing page could steal credentials if entered.',
-        'If exposed, change reused passwords and confirm the destination via a trusted source.'
+        'Credential theft or account takeover risk.',
+        'Victims could lose access to email, banking, or internal systems.'
       ],
-      danger: 'Illustrative example only. It is not a verdict on a real URL.',
-      type: 'Example URL',
+      danger: 'This is not a real verdict for any live website. It is only an example report.',
+      type: 'Sample website',
       size: 'Not applicable',
       hash: 'Not applicable',
-      source: 'Built-in fictional sample',
-      status: 'Sample report loaded',
+      source: 'Built-in fictional report',
+      status: 'Sample report loaded'
     },
     app: {
       title: 'Illustrative sample: excessive permissions',
       score: 68,
       level: 'Medium · sample only',
-      kind: 'warn',
-      summary: 'Fictional example describing suspicious app permissions. No app was uploaded or analyzed.',
+      badge: 'warn',
+      summary: 'Example review for an app package requesting permissions that are broader than expected for its purpose.',
       details: [
-        'Example signal: permissions broader than the app purpose requires.',
-        'Example signal: background activity is unusually aggressive.',
-        'Illustrative result; no package inspection occurred.'
+        'Example signal: background access and location usage.',
+        'Example signal: hidden activity on install or startup.',
+        'Illustrative sample only — no app package was inspected.'
       ],
       impact: [
-        'An invasive app could expose location or personal information.',
-        'Review app permissions and install only from trusted sources.'
+        'Potential privacy or behavioral risk from background monitoring.',
+        'Apps with broad access should be reviewed with a real security workflow.'
       ],
-      danger: 'Illustrative example only. It is not a verdict on a real app package.',
-      type: 'Example app package',
-      size: '18 MB · sample',
-      hash: 'Example only · no package hash',
-      source: 'Built-in fictional sample',
-      status: 'Sample report loaded',
+      danger: 'This is only a mock scenario, not a real app security report.',
+      type: 'Sample app package',
+      size: '18 MB',
+      hash: 'Sample only · no real hash',
+      source: 'Built-in fictional report',
+      status: 'Sample report loaded'
     }
   };
 
-  function initCounters() {
-    document.querySelectorAll('.stat-number').forEach((el) => {
-      const target = Number(el.dataset.target || 0);
-      let value = 0;
-      const step = Math.max(1, Math.ceil(target / 25));
-      const interval = setInterval(() => {
-        value += step;
-        if (value >= target) {
-          value = target;
-          clearInterval(interval);
-        }
-        el.textContent = value;
-      }, 28);
-    });
-  }
-
-  function setupFAQ() {
-    document.querySelectorAll('.faq-question').forEach((button) => {
-      button.addEventListener('click', () => {
-        const item = button.parentElement;
-        const wasOpen = item.classList.contains('is-open');
-
-        document.querySelectorAll('.faq-item').forEach((faqItem) => {
-          faqItem.classList.remove('is-open');
-          faqItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-        });
-
-        if (!wasOpen) {
-          item.classList.add('is-open');
-          button.setAttribute('aria-expanded', 'true');
-        }
-      });
-    });
-  }
-
-  tabs.forEach((tab) => {
+  document.querySelectorAll('.tab[data-tab]').forEach((tab) => {
     tab.addEventListener('click', () => setTab(tab.dataset.tab));
   });
 
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files && fileInput.files[0]) {
-      setSelectedFile('file', fileInput.files[0]);
-    }
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    if (file) setSelectedFile('file', file);
   });
 
-  appInput.addEventListener('change', () => {
-    if (appInput.files && appInput.files[0]) {
-      setSelectedFile('app', appInput.files[0]);
-    }
+  appInput.addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    if (file) setSelectedFile('app', file);
   });
 
-  document.querySelectorAll('.upload-surface').forEach((surface) => {
-    surface.addEventListener('dragover', (event) => {
-      event.preventDefault();
-      surface.classList.add('is-dragging');
-    });
-
-    surface.addEventListener('dragleave', () => {
-      surface.classList.remove('is-dragging');
-    });
-
-    surface.addEventListener('drop', (event) => {
-      event.preventDefault();
-      const file = event.dataTransfer?.files?.[0];
-      const kind = surface.dataset.panel;
-      if (file && (kind === 'file' || kind === 'app')) {
-        setSelectedFile(kind, file);
-      }
-    });
-  });
-
-  document.querySelectorAll('[data-sample]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.sample;
-      setTab(type);
-      renderReport({ ...sampleReports[type], status: 'Sample report loaded' });
+  document.querySelectorAll('.sample-button').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.sample;
+      setTab(key);
+      renderReport(sampleReports[key]);
       document.getElementById('analysis').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
@@ -375,58 +294,78 @@
     event.preventDefault();
 
     if (activeTab === 'file') {
-      await reviewFile(selectedFiles.file || fileInput.files?.[0], 'File');
+      const file = fileInput.files?.[0];
+      await reviewFile(file, 'File');
     }
 
     if (activeTab === 'website') {
-      reviewUrl(urlInput.value);
+      reviewWebsite(websiteInput.value);
     }
 
     if (activeTab === 'app') {
-      await reviewFile(selectedFiles.app || appInput.files?.[0], 'App package');
+      const file = appInput.files?.[0];
+      await reviewFile(file, 'App package');
     }
   });
 
   reportButton.addEventListener('click', () => {
     if (!currentReport) return;
 
-    const lines = [
-      'MALTIX — DEMO SECURITY REPORT',
-      'IMPORTANT: This is not a real malware scan or security verdict.',
-      `Generated: ${currentReport.generatedAt}`,
+    const content = [
+      'MALTIX DEMO REPORT',
+      'This is not a real malware verdict.',
+      `Generated: ${new Date(currentReport.generatedAt).toLocaleString()}`,
       `Result: ${currentReport.title}`,
       `Risk: ${currentReport.level}`,
-      `Score: ${currentReport.score == null ? 'Not available' : `${currentReport.score}/100`}`,
       `Type: ${currentReport.type || 'Not available'}`,
       `Size: ${currentReport.size || 'Not available'}`,
-      `SHA-256: ${currentReport.hash || 'Not available'}`,
+      `Hash: ${currentReport.hash || 'Not available'}`,
       `Source: ${currentReport.source || 'Not available'}`,
       '',
       currentReport.summary,
       '',
-      'Details:',
+      'Key details:',
       ...(currentReport.details || []).map((item) => `- ${item}`),
       '',
       'Potential impact:',
       ...(currentReport.impact || []).map((item) => `- ${item}`),
       '',
       currentReport.danger
-    ];
+    ].join('\n');
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = url;
-    downloadLink.download = 'maltix-demo-report.txt';
-    downloadLink.click();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'maltix-demo-report.txt';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
     URL.revokeObjectURL(url);
+  });
+
+  qaButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const item = button.closest('.faq-item');
+      const opened = item.classList.contains('is-open');
+
+      document.querySelectorAll('.faq-item').forEach((faqItem) => {
+        faqItem.classList.remove('is-open');
+        faqItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+      });
+
+      if (!opened) {
+        item.classList.add('is-open');
+        button.setAttribute('aria-expanded', 'true');
+      }
+    });
   });
 
   themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('light-theme');
-    const isLight = document.body.classList.contains('light-theme');
-    themeToggle.textContent = isLight ? '🌙' : '☀️';
-    localStorage.setItem('maltix-theme', isLight ? 'light' : 'dark');
+    const light = document.body.classList.contains('light-theme');
+    themeToggle.textContent = light ? '🌙' : '☀️';
+    localStorage.setItem('maltix-theme', light ? 'light' : 'dark');
   });
 
   const savedTheme = localStorage.getItem('maltix-theme');
@@ -435,20 +374,22 @@
     themeToggle.textContent = '🌙';
   }
 
-  document.querySelectorAll('[data-scroll]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const target = document.getElementById(button.dataset.scroll);
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  statEls.forEach((stat) => {
+    const target = Number(stat.dataset.target || 0);
+    let value = 0;
+    const interval = setInterval(() => {
+      value += Math.max(1, Math.ceil(target / 25));
+      if (value >= target) {
+        value = target;
+        clearInterval(interval);
       }
-    });
+      stat.textContent = value;
+    }, 30);
   });
 
-  setupFAQ();
-  initCounters();
   setTab('file');
-  updateBadge('neutral', 'Waiting');
+  setBadge('neutral', 'Waiting');
   setText('scan-status', 'Ready · demo mode');
-  meter.style.width = '0%';
+  scoreMeter.style.width = '0%';
   reportButton.disabled = true;
 })();
