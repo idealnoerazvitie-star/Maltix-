@@ -2,9 +2,8 @@
   'use strict';
 
   const $ = (id) => document.getElementById(id);
-
   const tabs = [...document.querySelectorAll('.tab[data-tab]')];
-  const surfaces = [...document.querySelectorAll('.upload-surface[data-panel]')];
+  const uploadPanels = [...document.querySelectorAll('.upload-surface[data-panel]')];
   const form = $('scan-form');
   const fileInput = $('file-upload');
   const appInput = $('app-upload');
@@ -38,7 +37,7 @@
     return `${size.toFixed(1)} ${units[unit]}`;
   }
 
-  function selectTab(name) {
+  function setTab(name) {
     activeTab = name;
     tabs.forEach((tab) => {
       const selected = tab.dataset.tab === name;
@@ -46,10 +45,10 @@
       tab.setAttribute('aria-selected', String(selected));
     });
 
-    surfaces.forEach((surface) => {
-      const shouldShow = surface.dataset.panel === name;
-      surface.classList.toggle('is-visible', shouldShow);
-      surface.hidden = !shouldShow;
+    uploadPanels.forEach((panel) => {
+      const shouldShow = panel.dataset.panel === name;
+      panel.classList.toggle('is-visible', shouldShow);
+      panel.hidden = !shouldShow;
     });
   }
 
@@ -73,7 +72,8 @@
     const badgeKind = data.kind || 'neutral';
     updateBadge(badgeKind, data.level);
 
-    meter.style.width = data.score == null ? '0%' : `${Math.max(0, Math.min(100, data.score))}%`;
+    const scoreValue = data.score == null ? 0 : Math.max(0, Math.min(100, data.score));
+    meter.style.width = `${scoreValue}%`;
 
     const list = $('malware-details');
     list.replaceChildren();
@@ -108,18 +108,21 @@
   }
 
   function setSelectedFile(kind, file) {
+    if (!file) return;
     selectedFiles[kind] = file;
-    const surface = document.querySelector(`[data-panel="${kind}"]`);
-    if (!surface) return;
+    const target = document.querySelector(`[data-panel="${kind}"]`);
+    if (!target) return;
 
-    let detail = surface.querySelector('.selected-file');
-    if (!detail) {
-      detail = document.createElement('p');
-      detail.className = 'selected-file';
-      surface.appendChild(detail);
+    let info = target.querySelector('.selected-file');
+    if (!info) {
+      info = document.createElement('p');
+      info.className = 'selected-file';
+      info.style.marginTop = '12px';
+      info.style.color = 'var(--muted)';
+      target.appendChild(info);
     }
 
-    detail.textContent = `${file.name} · ${formatBytes(file.size)}`;
+    info.textContent = `${file.name} · ${formatBytes(file.size)}`;
   }
 
   async function reviewFile(file, label) {
@@ -150,7 +153,7 @@
       score: null,
       level: 'Not scanned',
       kind: 'neutral',
-      summary: 'This page calculated local file metadata and a SHA-256 hash in the browser. It did not upload the file, execute it, or perform malware detection.',
+      summary: 'This page calculated local file metadata and a SHA-256 hash in the browser. It did not upload the file, execute it, or perform a real malware check.',
       details: [
         'No antivirus engine or sandbox is connected.',
         'A SHA-256 hash identifies the file but is not a safety verdict.',
@@ -221,7 +224,7 @@
     file: {
       title: 'Illustrative sample: suspicious downloader',
       score: 82,
-      level: 'High — sample only',
+      level: 'High · sample only',
       kind: 'warn',
       summary: 'Fictional example showing how a future report might describe downloader behavior. This is not a scan of a real file.',
       details: [
@@ -235,15 +238,15 @@
       ],
       danger: 'Illustrative example only. It is not evidence that any submitted file is infected.',
       type: 'Example executable',
-      size: '2.4 MB — sample',
-      hash: 'Example only — no file hash',
+      size: '2.4 MB · sample',
+      hash: 'Example only · no file hash',
       source: 'Built-in fictional sample',
-      status: 'Sample report loaded'
+      status: 'Sample report loaded',
     },
     website: {
       title: 'Illustrative sample: possible phishing',
       score: 74,
-      level: 'High — sample only',
+      level: 'High · sample only',
       kind: 'warn',
       summary: 'Fictional example demonstrating a possible credential-harvesting warning. Maltix did not visit or inspect a website.',
       details: [
@@ -260,12 +263,12 @@
       size: 'Not applicable',
       hash: 'Not applicable',
       source: 'Built-in fictional sample',
-      status: 'Sample report loaded'
+      status: 'Sample report loaded',
     },
     app: {
       title: 'Illustrative sample: excessive permissions',
       score: 68,
-      level: 'Medium — sample only',
+      level: 'Medium · sample only',
       kind: 'warn',
       summary: 'Fictional example describing suspicious app permissions. No app was uploaded or analyzed.',
       details: [
@@ -279,22 +282,38 @@
       ],
       danger: 'Illustrative example only. It is not a verdict on an actual app package.',
       type: 'Example app package',
-      size: '18 MB — sample',
-      hash: 'Example only — no package hash',
+      size: '18 MB · sample',
+      hash: 'Example only · no package hash',
       source: 'Built-in fictional sample',
-      status: 'Sample report loaded'
+      status: 'Sample report loaded',
     }
   };
 
   function setInitialState() {
-    setText('scan-status', 'Ready — demo mode');
+    setText('scan-status', 'Ready · demo mode');
     updateBadge('neutral', 'Waiting');
     meter.style.width = '0%';
     reportButton.disabled = true;
   }
 
+  function animateCounters() {
+    document.querySelectorAll('.stat-number').forEach((el) => {
+      const target = Number(el.dataset.target || 0);
+      let current = 0;
+      const step = Math.max(1, Math.ceil(target / 30));
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(interval);
+        }
+        el.textContent = current;
+      }, 30);
+    });
+  }
+
   tabs.forEach((tab) => {
-    tab.addEventListener('click', () => selectTab(tab.dataset.tab));
+    tab.addEventListener('click', () => setTab(tab.dataset.tab));
   });
 
   fileInput.addEventListener('change', () => {
@@ -323,7 +342,6 @@
       event.preventDefault();
       const file = event.dataTransfer?.files?.[0];
       const kind = surface.dataset.panel;
-
       if (file && (kind === 'file' || kind === 'app')) {
         setSelectedFile(kind, file);
       }
@@ -333,12 +351,9 @@
   document.querySelectorAll('[data-sample]').forEach((button) => {
     button.addEventListener('click', () => {
       const kind = button.dataset.sample;
-      selectTab(kind);
+      setTab(kind);
       renderReport({ ...sampleReports[kind], status: 'Sample report loaded' });
-      document.getElementById('analysis').scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
+      document.getElementById('analysis').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 
@@ -385,27 +400,49 @@
     ];
 
     const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
+    const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = objectUrl;
     a.download = 'maltix-demo-report.txt';
     a.click();
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(objectUrl);
   });
 
   themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('light-theme');
-    try {
-      localStorage.setItem('maltix-theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
-    } catch {
-      // Ignore storage errors gracefully.
-    }
+    const isLight = document.body.classList.contains('light-theme');
+    themeToggle.textContent = isLight ? '🌙' : '☀️';
+    localStorage.setItem('maltix-theme', isLight ? 'light' : 'dark');
   });
 
   const savedTheme = localStorage.getItem('maltix-theme');
   if (savedTheme === 'light') {
     document.body.classList.add('light-theme');
+    themeToggle.textContent = '🌙';
   }
 
+  document.querySelectorAll('[data-scroll]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = document.getElementById(button.dataset.scroll);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  document.querySelectorAll('.faq-question').forEach((button) => {
+    button.addEventListener('click', () => {
+      const item = button.parentElement;
+      const isOpen = item.classList.contains('is-open');
+      document.querySelectorAll('.faq-item').forEach((faqItem) => {
+        faqItem.classList.remove('is-open');
+        faqItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        item.classList.add('is-open');
+        button.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
   setInitialState();
+  animateCounters();
 })();
