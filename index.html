@@ -6,7 +6,7 @@
     <title>Maltix | Free Malware Sandbox</title>
     <meta
       name="description"
-      content="Maltix is a free, no-login malware sandbox that analyzes files, websites, and apps for suspicious behavior and explains the risks in plain language."
+      content="Maltix is a free, no-login malware sandbox that analyzes files, websites, and apps for suspicious behavior."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -30,22 +30,24 @@
         <nav class="main-nav" aria-label="Main navigation">
           <a href="#scan">Scan</a>
           <a href="#analysis">Analysis</a>
-          <a href="#threats">Threats</a>
-          <a href="#about">About</a>
+          <a href="#features">Features</a>
+          <a href="#privacy">Privacy</a>
         </nav>
 
-        <button class="ghost-button" type="button">Free • No login</button>
+        <div class="header-actions">
+          <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Toggle theme">☀️</button>
+          <button class="ghost-button" type="button">Free • No login</button>
+        </div>
       </header>
 
       <main>
         <section class="hero">
           <div class="hero-copy">
-            <span class="eyebrow">AI-powered threat review</span>
-            <h1>Check files, websites, and apps for malware without signing in.</h1>
+            <span class="eyebrow">Demo + sandbox review</span>
+            <h1>Check files, websites, and apps for suspicious malware behavior.</h1>
             <p>
-              Maltix opens suspicious files in a safe sandbox, analyzes behavior,
-              and tells you what kind of malware it could be, what it can do to your
-              device, and how dangerous it really is.
+              Maltix gives users a free, no-login way to open a file, website, or app in a sandbox-style overview,
+              review suspicious behavior, and understand what kind of malware may be involved and how dangerous it could be.
             </p>
 
             <div class="hero-badges" aria-label="Maltix features">
@@ -53,6 +55,11 @@
               <span>Website check</span>
               <span>App review</span>
               <span>Free access</span>
+            </div>
+
+            <div class="demo-note">
+              <span class="demo-dot"></span>
+              <span>Demo mode: This interface simulates malware analysis for presentation and product prototyping.</span>
             </div>
           </div>
 
@@ -69,13 +76,17 @@
             </div>
 
             <form id="scan-form" class="scan-form">
-              <div class="input-block file-input-block is-visible" data-panel="file">
-                <label for="file-upload">Upload suspicious file</label>
-                <input id="file-upload" type="file" />
+              <div class="upload-surface is-visible" data-panel="file">
+                <input id="file-upload" type="file" class="file-input" />
+                <label for="file-upload" class="upload-label">
+                  <span class="upload-icon">⬆</span>
+                  <strong>Drop a file here</strong>
+                  <small>or click to browse</small>
+                </label>
               </div>
 
-              <div class="input-block website-input-block" data-panel="website">
-                <label for="website-url">Website URL</label>
+              <div class="upload-surface" data-panel="website">
+                <label class="url-label" for="website-url">Website URL</label>
                 <input
                   id="website-url"
                   type="url"
@@ -84,9 +95,19 @@
                 />
               </div>
 
-              <div class="input-block app-input-block" data-panel="app">
-                <label for="app-upload">Upload app package</label>
-                <input id="app-upload" type="file" accept=".apk,.zip,.exe,.msi,.dmg,.ipa,.jar" />
+              <div class="upload-surface" data-panel="app">
+                <input id="app-upload" type="file" class="file-input" accept=".apk,.zip,.exe,.msi,.dmg,.ipa,.jar" />
+                <label for="app-upload" class="upload-label">
+                  <span class="upload-icon">⬆</span>
+                  <strong>Drop an app package here</strong>
+                  <small>APK, ZIP, EXE, MSI, IPA, JAR</small>
+                </label>
+              </div>
+
+              <div class="sample-row">
+                <button type="button" class="sample-button" data-sample="file">Try file sample</button>
+                <button type="button" class="sample-button" data-sample="website">Try website sample</button>
+                <button type="button" class="sample-button" data-sample="app">Try app sample</button>
               </div>
 
               <button class="primary-button" type="submit">Run Maltix sandbox</button>
@@ -122,6 +143,16 @@
             <span class="risk-badge neutral" id="risk-badge">Waiting</span>
           </div>
 
+          <div class="progress-block">
+            <div class="progress-topline">
+              <span>Sandbox status</span>
+              <span id="scan-status">Ready</span>
+            </div>
+            <div class="meter">
+              <span id="score-meter"></span>
+            </div>
+          </div>
+
           <div class="report-grid">
             <article class="report-card highlight-card">
               <p class="card-label">Threat score</p>
@@ -129,11 +160,8 @@
                 <span class="score" id="threat-score">--</span>
                 <span class="score-scale">/100</span>
               </div>
-              <div class="meter">
-                <span id="score-meter"></span>
-              </div>
               <p class="report-summary" id="report-summary">
-                Upload a file, website, or app package and Maltix will run an AI-powered sandbox review.
+                Upload a file, website, or app package and Maltix will review it in a sandbox-style security report.
               </p>
             </article>
 
@@ -148,7 +176,7 @@
             <article class="report-card">
               <p class="card-label">What it can do</p>
               <ul id="device-impact">
-                <li>Risk details will appear here after the sandbox review.</li>
+                <li>Threat details will appear here after the sandbox review.</li>
               </ul>
             </article>
 
@@ -156,56 +184,75 @@
               <p class="card-label">Danger level</p>
               <h3 id="danger-level">Not assessed</h3>
               <p id="danger-text">
-                The AI analyst will explain how harmful the sample may be to your PC, laptop, phone, tablet, or other device.
+                The AI sandbox review will explain how harmful the sample may be to your PC, laptop, phone, tablet, or other device.
               </p>
             </article>
           </div>
+
+          <div class="meta-panel">
+            <div class="info-row">
+              <span>File type</span>
+              <strong id="meta-type">Not available</strong>
+            </div>
+            <div class="info-row">
+              <span>Size</span>
+              <strong id="meta-size">Not available</strong>
+            </div>
+            <div class="info-row">
+              <span>Hash</span>
+              <strong id="meta-hash">Not available</strong>
+            </div>
+            <div class="info-row">
+              <span>Source</span>
+              <strong id="meta-source">Not available</strong>
+            </div>
+          </div>
         </section>
 
-        <section class="threat-section" id="threats">
+        <section class="threat-section" id="features">
           <div class="section-heading">
-            <span class="eyebrow">Common threats</span>
-            <h2>How malware behaves</h2>
+            <span class="eyebrow">What Maltix adds</span>
+            <h2>Clearer safety insights</h2>
           </div>
 
           <div class="threat-cards">
             <article>
-              <h3>Ransomware</h3>
-              <p>Encrypts files and demands payment while blocking access to your data.</p>
+              <h3>Accurate risk labels</h3>
+              <p>Shows the likely malware type, the danger level, and the type of behavior the sample is using.</p>
             </article>
             <article>
-              <h3>Trojan</h3>
-              <p>Disguises itself as a normal file and opens a backdoor for attackers.</p>
+              <h3>Device impact</h3>
+              <p>Explains what malware could do to a PC, laptop, smartphone, tablet, or other connected gadget.</p>
             </article>
             <article>
-              <h3>Keylogger</h3>
-              <p>Captures your keystrokes and can steal passwords, messages, and banking details.</p>
+              <h3>Upload guidance</h3>
+              <p>Includes drag-and-drop areas and support for file, app, and website inputs without forcing a login.</p>
             </article>
             <article>
-              <h3>Spyware</h3>
-              <p>Monitors your activity, location, screen, or microphones without consent.</p>
+              <h3>Trust-first design</h3>
+              <p>Highlights that the current interface is a product demo and not a real engine, helping set realistic expectations.</p>
             </article>
           </div>
         </section>
 
-        <section class="about" id="about">
+        <section class="about" id="privacy">
           <div class="section-heading">
-            <span class="eyebrow">Why Maltix</span>
-            <h2>Fast, open, and built for everyday protection.</h2>
+            <span class="eyebrow">Privacy + trust</span>
+            <h2>Built for honest, secure product messaging.</h2>
           </div>
 
           <div class="about-grid">
             <div>
-              <h3>Free for everyone</h3>
-              <p>No login, no paywall, and no private access gate. Anyone can check a file, site, or app.</p>
+              <h3>No login required</h3>
+              <p> Anyone can open the tool and test the interface without creating an account or paying a subscription fee.</p>
             </div>
             <div>
-              <h3>Sandbox-first review</h3>
-              <p>Files are run in a controlled environment so suspicious behavior can be evaluated safely.</p>
+              <h3>Clear limits</h3>
+              <p> The current version is a front-end prototype that simulates scanning behavior for presentation and product design.</p>
             </div>
             <div>
-              <h3>Clear explanations</h3>
-              <p>Maltix explains the malware type, what it does, what devices it affects, and how dangerous it is.</p>
+              <h3>Safer product direction</h3>
+              <p> Real scanning should occur in a secure backend with controlled sandboxing, retention policies, and proper abuse protections.</p>
             </div>
           </div>
         </section>
